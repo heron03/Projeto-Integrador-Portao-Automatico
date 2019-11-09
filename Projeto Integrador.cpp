@@ -1,79 +1,101 @@
-#include <Servo.h>
-#include <Ultrasonic.h>
-
 #define TRIGGER_PIN  12
 #define ECHO_PIN     13
+
+#include <Ultrasonic.h>
+#include <Servo.h>
 Servo myservo;  
 Ultrasonic ultrasonic(TRIGGER_PIN, ECHO_PIN);
 
-int pos = 0;    
 
 void setup() {
   Serial.begin(9600);
-  myservo.attach(9);  
+  myservo.attach(9);
 }
 
-void loop() {
-    if (maiorValor == 0) {
-        maiorValor = ValorPortaoAoSensor();
-    }
-
-    distancia = distanciaCm();
-    if (distancia < maiorValor + 2) {
-        fecharPortao();
-        maiorValor = 0;
-        while true {
-            delay(1000);
-            valorAtual = distanciaCm();
-            if (valorAtual < distancia + 2) {
-                return false
-            }
+void loop() {  
+    float valorEstatico = valorEstaticoPortao();
+    float ultimoValor = valorDinamicoDoportao();
+    while (true) {
+        float valorDinamico = valorDinamicoDoportao();
+        Serial.print("CM: ");
+        Serial.println(valorDinamico);
+        Serial.print("Ultimo valor inicio ");
+        Serial.println(ultimoValor);
+        if (valorDinamico - 2 > valorEstatico) {
+            Serial.print(" Valor Dinamico: ");
+            Serial.print(valorDinamico);
+            Serial.print(" Valor Estatico: ");
+            Serial.print(valorEstatico);
+            Serial.println("Fechar Portão");
+            fecharPortao();
         }
-    }
-
-    if (distancia > maiorValor + 2) {
-        abirPortao();
-        maiorValor = 0;
-        while true {
-            delay(1000);
-            valorAtual = distanciaCm();
-            if (valorAtual < distancia + 2) {
-                return false
+        if (valorDinamico - 2 > ultimoValor) {
+          Serial.print("AAAAAAAAAAAA ");
+          Serial.println(ultimoValor);
+        
+            abirPortao();
+            Serial.print(" Valor Dinamico: ");
+            Serial.print(valorDinamico);
+            Serial.print(" Ultimo Valor: ");
+            Serial.print(ultimoValor);
+            Serial.println("Abrir Portão");
+            while (true) {
+              if (valorDinamico - 2 > valorEstatico) {
+                Serial.println("Fechar Portão");
+                fecharPortao();
+                ultimoValor = valorEstatico;
+                valorDinamico = valorDinamicoDoportao();
+                
+                return false;
+              }
+              valorDinamico = valorDinamicoDoportao();
+              Serial.println(valorDinamico);
+              delay(5000);
             }
+            Serial.println("OPAA");
+            Serial.print(valorEstatico);
+            ultimoValor = valorEstatico;
+        } else {
+          ultimoValor = valorDinamico;
+          Serial.print("ultimoValor Fim: ");
+          Serial.println(ultimoValor);
         }
+        
+        delay(3000);
     }
-    delay(100);
     
 }
 
-void distanciaCm() {
+float valorEstaticoPortao() {
+    float valorEstaticoPortao = distanciaCm();   
+     Serial.print("valor Estatico   ");
+     Serial.println(valorEstaticoPortao);
+
+     return valorEstaticoPortao;
+}
+
+float valorDinamicoDoportao() {
+    float valorDinamico = distanciaCm(); 
+
+    return valorDinamico;       
+}
+
+float distanciaCm() {
     float cmMsec, inMsec;
     long microsec = ultrasonic.timing();
-
     cmMsec = ultrasonic.convert(microsec, Ultrasonic::CM);
-    Serial.print(", CM: ");
-    Serial.println(cmMsec);
-    delay(100);
-    
+        
     return cmMsec;
 }
 
-void ValorPortaoAoSensor() {
-    float maiorValor;
-    maiorValor = calcularDistancia();
-    
-    return maiorValor;
-}
-
 void abirPortao() {
-    for (pos = 0; pos <= 120; pos += 1) { 
-        myservo.write(pos);              
-        delay(15);                       
-    }
+        myservo.write(140);      
+        delay(1000);   
+        
+    Serial.print("Abrir O PORTÃO");
 }
-void fecharPortao() {
-    for (pos = 120; pos >= 0; pos -= 1) { 
-        myservo.write(pos);              
-        delay(15);                       
-    }
+void fecharPortao() { 
+        myservo.write(10);
+        delay(1000);   
+    Serial.print("FECHAR O PORTÃO");
 }
