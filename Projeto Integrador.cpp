@@ -5,65 +5,52 @@
 #include <Servo.h>
 Servo myservo;  
 Ultrasonic ultrasonic(TRIGGER_PIN, ECHO_PIN);
-
+const int pinoBotao = 7;
 
 void setup() {
   Serial.begin(9600);
   myservo.attach(9);
+  pinMode(pinoBotao, INPUT_PULLUP);
 }
 
 void loop() {  
     float valorEstatico = valorEstaticoPortao();
     float ultimoValor = valorDinamicoDoportao();
-    while (true) {
-        float valorDinamico = valorDinamicoDoportao();
-        Serial.print("CM: ");
-        Serial.println(valorDinamico);
-        Serial.print("Ultimo valor inicio ");
-        Serial.println(ultimoValor);
-        if (valorDinamico - 2 > valorEstatico) {
-            Serial.print(" Valor Dinamico: ");
-            Serial.print(valorDinamico);
-            Serial.print(" Valor Estatico: ");
-            Serial.print(valorEstatico);
-            Serial.println("Fechar Portão");
-            fecharPortao();
-        }
-        if (valorDinamico - 2 > ultimoValor) {
-          Serial.print("AAAAAAAAAAAA ");
-          Serial.println(ultimoValor);
-        
-            abirPortao();
-            Serial.print(" Valor Dinamico: ");
-            Serial.print(valorDinamico);
-            Serial.print(" Ultimo Valor: ");
-            Serial.print(ultimoValor);
-            Serial.println("Abrir Portão");
-            while (true) {
-              if (valorDinamico - 2 > valorEstatico) {
-                Serial.println("Fechar Portão");
-                fecharPortao();
-                ultimoValor = valorEstatico;
+    if(digitalRead(pinoBotao) != LOW){
+      Serial.println("AAAAAAAAAAAAAAA");
+      while (true) {
+          float valorDinamico = valorDinamicoDoportao();
+          if (valorDinamico - 2 > valorEstatico) {
+              fecharPortao();
+          }
+          if (valorDinamico - 2 > ultimoValor) {        
+              abirPortao();
+              while (true) {
+                if (valorDinamico - 2 > valorEstatico) {
+                  fecharPortao();
+                  ultimoValor = valorEstatico;
+                  valorDinamico = valorDinamicoDoportao();
+                  
+                  break;
+                }
                 valorDinamico = valorDinamicoDoportao();
-                
-                return false;
+                delay(5000);
               }
-              valorDinamico = valorDinamicoDoportao();
-              Serial.println(valorDinamico);
-              delay(5000);
-            }
-            Serial.println("OPAA");
-            Serial.print(valorEstatico);
-            ultimoValor = valorEstatico;
-        } else {
+              Serial.println("OPAA");
+              Serial.print(valorEstatico);
+              ultimoValor = valorEstatico;
+          }  
           ultimoValor = valorDinamico;
-          Serial.print("ultimoValor Fim: ");
-          Serial.println(ultimoValor);
-        }
-        
-        delay(3000);
+          if(digitalRead(pinoBotao) == HIGH){
+              fecharPortao();
+              
+              return false;
+          }
+          
+          delay(3000);
+      }
     }
-    
+    delay(10);
 }
 
 float valorEstaticoPortao() {
