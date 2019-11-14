@@ -5,57 +5,64 @@
 #include <Servo.h>
 Servo myservo;  
 Ultrasonic ultrasonic(TRIGGER_PIN, ECHO_PIN);
-const int pinoBotao = 7;
+
+int estadoBotao = 0;
 
 void setup() {
   Serial.begin(9600);
   myservo.attach(9);
-  pinMode(pinoBotao, INPUT_PULLUP);
+  pinMode(7, INPUT);
 }
 
 void loop() {  
     float valorEstatico = valorEstaticoPortao();
     float ultimoValor = valorDinamicoDoportao();
-    if(digitalRead(pinoBotao) != LOW){
-      Serial.println("AAAAAAAAAAAAAAA");
-      while (true) {
-          float valorDinamico = valorDinamicoDoportao();
-          if (valorDinamico - 2 > valorEstatico) {
-              fecharPortao();
-          }
-          if (valorDinamico - 2 > ultimoValor) {        
-              abirPortao();
-              while (true) {
-                if (valorDinamico - 2 > valorEstatico) {
-                  fecharPortao();
-                  ultimoValor = valorEstatico;
-                  valorDinamico = valorDinamicoDoportao();
-                  
-                  break;
-                }
-                valorDinamico = valorDinamicoDoportao();
+    estadoBotao = digitalRead(7);
+    if(estadoBotao != 0) {
+        abrirPortao();
+        fecharPortao();
+        abrirPortao();
+        Serial.println("Botão Precionado");
+         int opa = true;
+        while (opa) {
+            Serial.println("While para quando o portão abrir e ver se o carro entrou na garagem");   
+            float valorDinamico = valorDinamicoDoportao();
+            if (valorDinamico - 2 < valorEstatico - 5) {
                 delay(5000);
-              }
-              Serial.println("OPAA");
-              Serial.print(valorEstatico);
-              ultimoValor = valorEstatico;
-          }  
-          ultimoValor = valorDinamico;
-          if(digitalRead(pinoBotao) == HIGH){
-              fecharPortao();
-              
-              return false;
-          }
-          
-          delay(3000);
-      }
+                fecharPortao();
+                ultimoValor = valorEstatico;
+                while (opa) {
+                    Serial.println("While para ver se varia para abrir ou fechar");
+                    float valorDinamico = valorDinamicoDoportao();
+                    if (valorDinamico - 2 > ultimoValor) { 
+                    Serial.println("BLA BLa");       
+                        abrirPortao();
+                        while (opa) {
+                        if (valorDinamico - 2 > valorEstatico) {
+                            fecharPortao();
+                            ultimoValor = valorEstatico;
+                            valorDinamico = valorDinamicoDoportao();
+                            
+                            opa = false;
+                        }
+                        valorDinamico = valorDinamicoDoportao();
+                        delay(5000);
+                        }
+                        Serial.println("OPAA");
+                        Serial.print(valorEstatico);
+                        ultimoValor = valorEstatico;
+                    }  
+                    ultimoValor = valorDinamico;
+                    delay(3000);
+                }
+            }
+        }
     }
     delay(10);
 }
 
 float valorEstaticoPortao() {
-    float valorEstaticoPortao = distanciaCm();   
-     Serial.print("valor Estatico   ");
+    float valorEstaticoPortao = distanciaCm();
      Serial.println(valorEstaticoPortao);
 
      return valorEstaticoPortao;
@@ -75,7 +82,7 @@ float distanciaCm() {
     return cmMsec;
 }
 
-void abirPortao() {
+void abrirPortao() {
         myservo.write(140);      
         delay(1000);   
         
